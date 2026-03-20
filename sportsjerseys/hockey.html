@@ -18,9 +18,7 @@
   </a>
 
   <div class="d-flex align-items-center gap-3" style="margin-left:auto;">
-    <button id="login-btn" class="cart-btn" onclick="window.location.href='login.html'">
-      <span>👤 Login</span>
-    </button>
+    <button id="login-btn" class="cart-btn"></button>
 
     <button class="cart-btn" onclick="window.location.href='../cart.html'">
       <span>🛒 Cart</span>
@@ -327,10 +325,34 @@ function selectSize(button, index) {
   updateCardStock(index);
 }
 
+function updateAuthButton() {
+  const btn = document.getElementById("login-btn");
+  if (!btn) return;
+
+  const user = localStorage.getItem("vsv_current_user");
+
+  if (user) {
+    const parsedUser = JSON.parse(user);
+    const displayName = parsedUser.username || parsedUser.email || "Account";
+
+    btn.innerHTML = `<span>👤 ${displayName} | Sign Out</span>`;
+    btn.onclick = function () {
+      localStorage.removeItem("vsv_current_user");
+      window.location.href = "../index.html";
+    };
+  } else {
+    btn.innerHTML = "<span>👤 Login</span>";
+    btn.onclick = function () {
+      window.location.href = "../login.html";
+    };
+  }
+}
+
 function init() {
   console.log("All hockey products loaded:", products.length);
   console.log(products);
 
+  updateAuthButton();
   populateFilters();
   displayProducts(products);
 

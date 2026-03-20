@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -17,9 +17,7 @@
   </a>
 
   <div class="d-flex align-items-center gap-3" style="margin-left:auto;">
-    <button id="login-btn" class="cart-btn" onclick="window.location.href='login.html'">
-      <span>👤 Login</span>
-    </button>
+    <button id="login-btn" class="cart-btn"></button>
 
     <button class="cart-btn" onclick="window.location.href='../cart.html'">
       <span>🛒 Cart</span>
@@ -206,16 +204,6 @@ function updateCardStock(index) {
     }
 }
 
-function init() {
-    populateTeams();
-    displayPlayers(players);
-
-    document.getElementById("teamFilter").addEventListener("change", applyFilters);
-    document.getElementById("posFilter").addEventListener("change", applyFilters);
-    document.getElementById("sortFilter").addEventListener("change", applyFilters);
-    document.getElementById("searchInput").addEventListener("input", applyFilters);
-}
-
 function displayPlayers(items) {
   const grid = document.getElementById("player-grid");
   const resultsCount = document.getElementById("resultsCount");
@@ -330,6 +318,40 @@ function selectSize(button, index) {
   container.querySelectorAll(".size-btn").forEach(btn => btn.classList.remove("active"));
   button.classList.add("active");
   updateCardStock(index);
+}
+
+function updateAuthButton() {
+  const btn = document.getElementById("login-btn");
+  if (!btn) return;
+
+  const user = localStorage.getItem("vsv_current_user");
+
+  if (user) {
+    const parsedUser = JSON.parse(user);
+    const displayName = parsedUser.username || parsedUser.email || "Account";
+
+    btn.innerHTML = `<span>👤 ${displayName} | Sign Out</span>`;
+    btn.onclick = function () {
+      localStorage.removeItem("vsv_current_user");
+      window.location.href = "../index.html";
+    };
+  } else {
+    btn.innerHTML = "<span>👤 Login</span>";
+    btn.onclick = function () {
+      window.location.href = "../login.html";
+    };
+  }
+}
+
+function init() {
+    updateAuthButton();
+    populateTeams();
+    displayPlayers(players);
+
+    document.getElementById("teamFilter").addEventListener("change", applyFilters);
+    document.getElementById("posFilter").addEventListener("change", applyFilters);
+    document.getElementById("sortFilter").addEventListener("change", applyFilters);
+    document.getElementById("searchInput").addEventListener("input", applyFilters);
 }
 
 init();

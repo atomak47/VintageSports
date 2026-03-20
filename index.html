@@ -17,9 +17,7 @@
   </a>
 
   <div class="nav-actions" id="nav-actions">
-    <button id="login-btn" class="cart-btn" onclick="window.location.href='login.html'">
-      <span>👤 Login</span>
-    </button>
+    <button id="login-btn" class="cart-btn"></button>
 
     <button class="cart-btn" onclick="window.location.href='cart.html'">
       <span>🛒 Cart</span>
@@ -98,28 +96,26 @@
     badge.textContent = totalItems;
   }
 
-  function logoutUser() {
-    localStorage.removeItem("vsv_current_user");
-    window.location.href = "index.html";
-  }
-
-  function renderNavbarUser() {
+  function updateAuthButton() {
     const navActions = document.getElementById("nav-actions");
-    const currentUser = JSON.parse(localStorage.getItem("vsv_current_user"));
-
     if (!navActions) return;
 
-    if (currentUser && currentUser.username) {
+    const user = localStorage.getItem("vsv_current_user");
+
+    if (user) {
+      const parsedUser = JSON.parse(user);
+      const displayName = parsedUser.username || parsedUser.email || "Account";
+
       navActions.innerHTML = `
         <button class="cart-btn" type="button" onclick="window.location.href='order_history.html'">
           <span>📦 My Orders</span>
         </button>
 
         <button class="cart-btn" type="button">
-          <span>👤 ${currentUser.username}</span>
+          <span>👤 ${displayName}</span>
         </button>
 
-        <button class="cart-btn" type="button" onclick="logoutUser()">
+        <button id="login-btn" class="cart-btn" type="button">
           <span>Sign Out</span>
         </button>
 
@@ -128,9 +124,17 @@
           <span class="cart-badge" id="cart-count">0</span>
         </button>
       `;
+
+      const loginBtn = document.getElementById("login-btn");
+      if (loginBtn) {
+        loginBtn.onclick = function () {
+          localStorage.removeItem("vsv_current_user");
+          window.location.href = "index.html";
+        };
+      }
     } else {
       navActions.innerHTML = `
-        <button id="login-btn" class="cart-btn" onclick="window.location.href='login.html'">
+        <button id="login-btn" class="cart-btn" type="button">
           <span>👤 Login</span>
         </button>
 
@@ -139,14 +143,20 @@
           <span class="cart-badge" id="cart-count">0</span>
         </button>
       `;
+
+      const loginBtn = document.getElementById("login-btn");
+      if (loginBtn) {
+        loginBtn.onclick = function () {
+          window.location.href = "login.html";
+        };
+      }
     }
 
     updateCartCount();
   }
 
   document.addEventListener("DOMContentLoaded", function () {
-    renderNavbarUser();
-    updateCartCount();
+    updateAuthButton();
   });
 </script>
 
