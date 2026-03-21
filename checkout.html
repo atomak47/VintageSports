@@ -124,6 +124,7 @@
 
   document.getElementById("checkout-form").addEventListener("submit", async function (event) {
     event.preventDefault();
+    console.log("CHECKOUT SUBMIT FIRED");
 
     const cart = getCart();
     const currentUser = getCurrentUser();
@@ -150,15 +151,17 @@
       name: document.getElementById("fullName").value.trim(),
       email: document.getElementById("email").value.trim(),
       address: document.getElementById("address").value.trim(),
-      cart: cart.map(item => ({
-        id: item.id || item._id || "",
-        name: item.name || "Unnamed Product",
-        price: Number(item.price || 0),
-        quantity: Number(item.quantity || 1),
-        size: item.size || "M"
-      })),
-      total: getCartTotal()
+    cart: cart.map(item => ({
+      _id: item._id || item.id || item.productId || "",
+      id: item._id || item.id || item.productId || "",
+      name: item.name || "Unnamed Product",
+      price: Number(item.price || 0),
+      quantity: Number(item.quantity || 1),
+      size: item.size || "M"
+    })),
     };
+
+    console.log("SENDING PAYLOAD:", payload);
 
     try {
       const response = await fetch("/api/checkout", {
@@ -170,6 +173,7 @@
       });
 
       const result = await response.json();
+      console.log("CHECKOUT RESPONSE:", result);
 
       if (!response.ok || !result.success) {
         throw new Error(result.message || "Checkout failed");

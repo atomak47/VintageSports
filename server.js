@@ -32,6 +32,14 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+transporter.verify((error, success) => {
+  if (error) {
+    console.error("Mail transporter error:", error);
+  } else {
+    console.log("Mail transporter is ready");
+  }
+});
+
 /* =========================
    TEST ROUTE
 ========================= */
@@ -41,6 +49,26 @@ app.get("/api/test", (req, res) => {
     message: "API works",
     mongoReadyState: mongoose.connection.readyState
   });
+});
+
+/* =========================
+   TEST EMAIL ROUTE
+========================= */
+app.get("/test-email", async (req, res) => {
+  try {
+    const result = await transporter.sendMail({
+      from: `"Vintage Sports Vault" <${process.env.EMAIL_USER}>`,
+      to: process.env.EMAIL_USER,
+      subject: "Test Email",
+      text: "This is a test email from Vintage Sports Vault."
+    });
+
+    console.log("Test email sent:", result.response);
+    res.send("Test email sent successfully.");
+  } catch (error) {
+    console.error("Test email error:", error);
+    res.status(500).send("Test email failed: " + error.message);
+  }
 });
 
 /* =========================
@@ -126,6 +154,12 @@ app.post("/api/login", async (req, res) => {
       });
     }
 
+    console.log("FOUND USER FROM DB:", {
+      username: user.username,
+      email: user.email,
+      role: user.role
+    });
+
     const passwordMatch = await bcrypt.compare(cleanPassword, user.password);
 
     if (!passwordMatch) {
@@ -172,7 +206,8 @@ app.post("/api/checkout", async (req, res) => {
 
     // Validate inventory first
     for (const item of cart) {
-      const productId = item.id || item.productId;
+
+      const productId = item._id || item.id || item.productId;
       const size = item.size;
       const quantity = Number(item.quantity || 1);
 
@@ -180,6 +215,13 @@ app.post("/api/checkout", async (req, res) => {
         return res.status(400).json({
           success: false,
           message: `Missing product or size for ${item.name || "an item"}.`
+        });
+      }
+
+      if (!mongoose.Types.ObjectId.isValid(productId)) {
+        return res.status(400).json({
+          success: false,
+          message: `${item.name || "A product"} has an invalid product ID. Clear your cart and re-add the item.`
         });
       }
 
@@ -209,7 +251,7 @@ app.post("/api/checkout", async (req, res) => {
       email: email.trim().toLowerCase(),
       address: address.trim(),
       items: cart.map((item) => ({
-        productId: item.id || item.productId || "",
+        productId: item._id || item.id || item.productId || "",
         name: item.name || "Unnamed Product",
         price: Number(item.price || 0),
         quantity: Number(item.quantity || 1),
@@ -223,9 +265,11 @@ app.post("/api/checkout", async (req, res) => {
 
     // Reduce inventory after order save
     for (const item of cart) {
-      const productId = item.id || item.productId;
+      const productId = item._id || item.id || item.productId;
       const size = item.size;
       const quantity = Number(item.quantity || 1);
+
+      if (!mongoose.Types.ObjectId.isValid(productId)) continue;
 
       const product = await Product.findById(productId);
       if (!product) continue;
@@ -301,6 +345,9 @@ app.post("/api/checkout", async (req, res) => {
       `
     };
 
+    console.log("About to send customer email to:", email);
+    console.log("About to send admin email to:", process.env.EMAIL_USER);
+
     const customerResult = await transporter.sendMail(customerMail);
     const adminResult = await transporter.sendMail(adminMail);
 
@@ -314,6 +361,15 @@ app.post("/api/checkout", async (req, res) => {
     });
   } catch (error) {
     console.error("Checkout error:", error);
+
+    if (error && error.response) {
+      console.error("Mail response:", error.response);
+    }
+
+    if (error && error.code) {
+      console.error("Mail code:", error.code);
+    }
+
     return res.status(500).json({
       success: false,
       message: error.message || "Failed to process checkout."
@@ -478,6 +534,8 @@ app.delete("/api/products/:id", async (req, res) => {
   }
 });
 
+
+
 /* =========================
    USER ORDER HISTORY ROUTE
 ========================= */
@@ -499,6 +557,26 @@ app.get("/api/orders/user/:email", async (req, res) => {
     });
   }
 });
+
+app.get("/test-email", async (req, res) => {
+  try {
+    const result = await transporter.sendMail({
+      from: `"Vintage Sports Vault" <${process.env.EMAIL_USER}>`,
+      to: process.env.EMAIL_USER,
+      subject: "Test Email",
+      text: "This is a test email from Vintage Sports Vault."
+    });
+
+    console.log("Test email sent:", result.response);
+    res.send("Test email sent successfully.");
+  } catch (error) {
+    console.error("Test email error:", error);
+    if (error && error.response) console.error("Mail response:", error.response);
+    if (error && error.code) console.error("Mail code:", error.code);
+    res.status(500).send("Test email failed: " + error.message);
+  }
+}); 
+
 
 /* =========================
    FRONTEND FALLBACK
