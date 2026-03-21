@@ -16,5 +16,5 @@ Create a user login and make sure you use a gmail account
     -add feature to be able to add more stock to current inventory for each product and size
 5. Make the checkout page a bit better
     -fix white font make it black
-7. Add a user profile
+7. Add a user profile -and have it autofill user info when checking out
 
